@@ -27,17 +27,7 @@ To integrate with MCP client applications, add the server configuration to your 
       ],
       "env": {
         "MNEMONIC": "YOUR_MNEMONIC",
-        "CUSTOM_NETWORKS": "{
-            \"rpcEndpoint\": \"https://my-rpc-endpoint.example.com\",
-            \"chainId\": \"my-chain-1\",
-            \"prefix\": \"mychain\",
-            \"denom\": \"utoken\",
-            \"gasPrice\": \"0.01\",
-            \"isMainnet\": false,
-            \"displayDenom\": \"token\",
-            \"displayDenomExponent\": 6,
-            \"explorerUrl\": \"https://explorer.example.com\"
-        }"
+        "CUSTOM_NETWORKS": "{\"rpcEndpoint\":\"https://my-rpc-endpoint.example.com\",\"chainId\":\"my-chain-1\",\"prefix\":\"mychain\",\"denom\":\"utoken\",\"gasPrice\":\"0.01\",\"isMainnet\":false,\"displayDenom\":\"token\",\"displayDenomExponent\":6,\"explorerUrl\":\"https://explorer.example.com\"}"
       },
       "disabled": false,
       "autoApprove": []

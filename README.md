@@ -12,33 +12,6 @@ A Model Context Protocol (MCP) server for interacting with MantraChain (Cosmos S
 - Configure mnemonic and network via environment variables
 - Choose between Dukong testnet and Mainnet
 
-## Installation
-
-### Option 1: Install from npm
-
-```bash
-# Install globally
-npm install -g mantrachain-mcp
-
-# Or install locally in your project
-npm install mantrachain-mcp
-```
-
-### Option 2: Install from source
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd mantrachain-mcp
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-```
-
-
 ## MCP Configuration
 
 To integrate with MCP client applications, add the server configuration to your MCP client configuration file:
@@ -50,7 +23,7 @@ To integrate with MCP client applications, add the server configuration to your 
       "command": "npx",
       "args": [
         "-y",
-        "mantrachain-mcp"
+        "mantrachain-mcp@latest"
       ],
       "env": {
         "MNEMONIC": "YOUR_MNEMONIC",
@@ -64,7 +37,7 @@ To integrate with MCP client applications, add the server configuration to your 
             \"displayDenom\": \"token\",
             \"displayDenomExponent\": 6,
             \"explorerUrl\": \"https://explorer.example.com\"
-        }" // optional
+        }"
       },
       "disabled": false,
       "autoApprove": []
@@ -81,7 +54,7 @@ If you installed the package locally instead of globally:
     "mantrachain-mcp": {
       "command": "node",
       "args": [
-        "./node_modules/mantrachain-mcp/build/index.js"
+        "your_path/mantrachain-mcp/build/index.js"
       ],
       "env": {
         "MNEMONIC": "YOUR_MNEMONIC"

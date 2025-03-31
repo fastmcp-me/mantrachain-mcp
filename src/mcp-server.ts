@@ -37,7 +37,7 @@ export async function startMCPServer() {
     "bank-send",
     "Send tokens to another address. Supports sending multiple coins in one transaction.",
     {
-      recipientAddress: z.string(),
+      recipientAddress: z.string().describe("Address of the recipient"),
       coins: z.array(
         z.object({
           denom: z.string().optional(),
@@ -48,11 +48,11 @@ export async function startMCPServer() {
           denom: z.string().optional(),
           amount: z.string()
         })
-      ),
+      ).describe("Array of coins to send, each with denom and amount"),
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
-      }),
-      memo: z.string().optional()
+      }).describe("Name of the network to use"),
+      memo: z.string().optional().describe("Optional memo for the transaction"),
     },
     async ({ recipientAddress, coins, networkName, memo }) => {
       await mantraClient.initialize(networkName);
@@ -88,13 +88,13 @@ export async function startMCPServer() {
     "delegate",
     "Delegate/Stake tokens to a validator",
     {
-      operatorAddress: z.string(),
-      amount: z.string(),
-      denom: z.string().optional(),
+      operatorAddress: z.string().describe("Address of the validator to delegate to"),
+      amount: z.string().describe("Amount of tokens to delegate"),
+      denom: z.string().optional().describe("Optional denomination of the tokens, default is network's default denom"),
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
-      }),
-      memo: z.string().optional()
+      }).describe("Name of the network to use"),
+      memo: z.string().optional().describe("Optional memo for the transaction")
     },
     async ({ operatorAddress, amount, denom, networkName, memo }) => {
       await mantraClient.initialize(networkName);
@@ -136,8 +136,8 @@ export async function startMCPServer() {
       ]).describe("Transaction message(s) to sign and broadcast"),
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
-      }),
-      memo: z.string().optional()
+      }).describe("Name of the network to use"),
+      memo: z.string().optional().describe("Optional memo for the transaction")
     },
     async ({ messages, networkName, memo = "" }) => {
       await mantraClient.initialize(networkName);
@@ -161,7 +161,7 @@ export async function startMCPServer() {
     {
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
-      }),
+      }).describe("Name of the network to use"),
     },
     async ({ networkName }) => {
       await mantraClient.initialize(networkName);
@@ -177,10 +177,10 @@ export async function startMCPServer() {
     "get-balance",
     "Get balance of an address (defaults to your own address if none provided)",
     {
-      address: z.string().optional(),
+      address: z.string().optional().describe("Optional address to get balance for, defaults to current address"),
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
-      }),
+      }).describe("Name of the network to use"),
     },
     async ({ address, networkName }) => {
       await mantraClient.initialize(networkName);
@@ -198,7 +198,7 @@ export async function startMCPServer() {
     {
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
-      }),
+      }).describe("Name of the network to use"),
     },
     async ({ networkName }) => {
       await mantraClient.initialize(networkName);

@@ -8,16 +8,16 @@ export function convertBigIntToString(obj: any): any {
     return obj.toString();
   }
   
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntToString);
+  }
+  
   if (typeof obj === 'object') {
-    if (Array.isArray(obj)) {
-      return obj.map(item => convertBigIntToString(item));
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      result[key] = convertBigIntToString(value);
     }
-    
-    const newObj: any = {};
-    for (const key in obj) {
-      newObj[key] = convertBigIntToString(obj[key]);
-    }
-    return newObj;
+    return result;
   }
   
   return obj;

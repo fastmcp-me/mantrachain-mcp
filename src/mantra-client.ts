@@ -1,29 +1,31 @@
-import { SigningStargateClient, QueryClient, setupStakingExtension, StakingExtension, GasPrice } from '@cosmjs/stargate';
+import { SigningStargateClient, QueryClient, setupStakingExtension, StakingExtension, setupDistributionExtension, DistributionExtension, GasPrice } from '@cosmjs/stargate';
 import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { Coin, EncodeObject } from '@cosmjs/proto-signing';
 import { getWallet, networks, NetworkConfig } from './config.js';
 import { Comet38Client } from '@cosmjs/tendermint-rpc';
 import { TransactionResponse } from './types.js';
-
-export interface BankSendParams {
-  recipientAddress: string;
-  coins: Coin[];
-  memo?: string;
-}
-
-export interface StakeParams {
-  operatorAddress: string;
-  amount: string;
-  denom?: string;
-  memo?: string;
-}
+import { BankService, BankSendParams } from './services/bank-service.js';
+import { StakingService, StakeParams, ClaimRewardsParams } from './services/staking-service.js';
+import { NetworkService } from './services/network-service.js';
+import { TxService } from './services/tx-service.js';
+import { IBCService, IBCTransferParams } from './services/ibc-service.js';
+import { ContractService, ContractQueryParams, ContractExecuteParams } from './services/contract-service.js';
 
 export class MantraClient {
   private wasmClient: SigningCosmWasmClient | null = null;
   private stargateClient: SigningStargateClient | null = null;
-  private queryClient: (QueryClient & StakingExtension) | null = null;
+  private queryClient: (QueryClient & StakingExtension & DistributionExtension) | null = null;
+  private cometClient: Comet38Client | null = null;
   private address: string | null = null;
   private network: NetworkConfig | null = null; 
+  
+  // Service instances
+  private bankService: BankService | null = null;
+  private stakingService: StakingService | null = null;
+  private networkService: NetworkService | null = null;
+  private txService: TxService | null = null;
+  private ibcService: IBCService | null = null;
+  private contractService: ContractService | null = null;
 
   async initialize(networkName: string) {
     if (!Object.keys(networks).includes(networkName)) {
@@ -49,12 +51,65 @@ export class MantraClient {
       { gasPrice }
     );
 
-    const cometClient = await Comet38Client.connect(this.network.rpcEndpoint);
+    this.cometClient = await Comet38Client.connect(this.network.rpcEndpoint);
 
     this.queryClient = QueryClient.withExtensions(
-      cometClient,
-      setupStakingExtension
+      this.cometClient,
+      setupStakingExtension,
+      setupDistributionExtension,
     );
+
+    // Initialize services
+    if (this.stargateClient && this.wasmClient && this.queryClient && this.address && this.network) {
+      this.bankService = new BankService(
+        this.stargateClient,
+        this.wasmClient,
+        this.queryClient,
+        this.cometClient,
+        this.address,
+        this.network
+      );
+      this.stakingService = new StakingService(
+        this.stargateClient,
+        this.wasmClient,
+        this.queryClient,
+        this.cometClient,
+        this.address,
+        this.network
+      );
+      this.networkService = new NetworkService(
+        this.stargateClient,
+        this.wasmClient,
+        this.queryClient,
+        this.cometClient,
+        this.address,
+        this.network
+      );
+      this.txService = new TxService(
+        this.stargateClient,
+        this.wasmClient,
+        this.queryClient,
+        this.cometClient,
+        this.address,
+        this.network
+      );
+      this.ibcService = new IBCService(
+        this.stargateClient,
+        this.wasmClient,
+        this.queryClient,
+        this.cometClient,
+        this.address,
+        this.network
+      );
+      this.contractService = new ContractService(
+        this.stargateClient,
+        this.wasmClient,
+        this.queryClient,
+        this.cometClient,
+        this.address,
+        this.network
+      );
+    }
 
     return {
       address: this.address,
@@ -65,141 +120,113 @@ export class MantraClient {
   /**
    * Send tokens to another address
    */
-  async sendTokens({
-    recipientAddress,
-    coins,
-    memo = ''
-  }: BankSendParams): Promise<TransactionResponse> {
-    if (!this.stargateClient || !this.wasmClient || !this.address || !this.network) {
+  async sendTokens(params: BankSendParams): Promise<TransactionResponse> {
+    if (!this.bankService) {
       throw new Error('Client not initialized. Call initialize() first.');
     }
-
-    try {
-      const result = await this.stargateClient.sendTokens(
-        this.address,
-        recipientAddress,
-        coins,
-        'auto',
-        memo
-      );
-
-      return {
-        transactionHash: result.transactionHash,
-        explorerUrl: `${this.network.explorerUrl}/tx/${result.transactionHash}`,
-        success: result.code === 0,
-        gasUsed: result.gasUsed.toString(),
-        gasWanted: result.gasWanted.toString()  ,
-      };
-    } catch (error) {
-      throw new Error(`Failed to send tokens: ${error instanceof Error ? error.message : String(error)}`);
-    }
+    return this.bankService.sendTokens(params);
   }
 
   /**
    * Query account balance
    */
   async getBalance(address?: string) {
-    if (!this.stargateClient || !this.wasmClient) {
+    if (!this.bankService) {
       throw new Error('Client not initialized. Call initialize() first.');
     }
-
-    const targetAddress = address || this.address;
-    if (!targetAddress) {
-      throw new Error('No address provided and no default address set.');
-    }
-
-    try {
-      const balance = await this.stargateClient.getAllBalances(targetAddress);
-      return balance;
-    } catch (error) {
-      throw new Error(`Failed to query balance: ${error instanceof Error ? error.message : String(error)}`);
-    }
+    return this.bankService.getBalance(address);
   }
 
   /**
    * Get all validators on the network
    */
   async getValidators() {
-    if (!this.queryClient) {
+    if (!this.stakingService) {
       throw new Error('Client not initialized. Call initialize() first.');
     }
+    return this.stakingService.getValidators();
+  }
 
-    try {
-      const response = await this.queryClient.staking.validators('BOND_STATUS_BONDED');
-      const validators = response.validators.sort((a, b) => {
-        return Number(BigInt(b.tokens) - BigInt(a.tokens));
-      });
-      return validators;
-    } catch (error) {
-      throw new Error(`Failed to fetch validators: ${error instanceof Error ? error.message : String(error)}`);
+  /**
+   * Get the current staking information for the address
+   */
+  async getDelegations(address?: string) {
+    if (!this.stakingService) {
+      throw new Error('Client not initialized. Call initialize() first.');
     }
+    return this.stakingService.getDelegations(address);
+  }
+
+  /**
+   * Get all available rewards for the address
+   */
+  async getAvailableRewards(address?: string) {
+    if (!this.stakingService) {
+      throw new Error('Client not initialized. Call initialize() first.');
+    }
+    return this.stakingService.getAvailableRewards(address);
   }
 
   /**
    * Stake (delegate) tokens to a validator
    */
-  async stakeTokens({
-    operatorAddress,
-    amount,
-    denom,
-    memo = ''
-  }: StakeParams): Promise<TransactionResponse> {
-    if (!this.stargateClient || !this.wasmClient || !this.address || !this.network) {
+  async stakeTokens(params: StakeParams): Promise<TransactionResponse> {
+    if (!this.stakingService) {
       throw new Error('Client not initialized. Call initialize() first.');
     }
+    return this.stakingService.stakeTokens(params);
+  }
+  
 
-    // Use the provided denom or fallback to network's default denom
-    denom = denom || this.network.denom;
-
-      // Convert amount to base units (assuming amount is in whole tokens) if denom is display denom
-    if (this.network.displayDenom && this.network.displayDenomExponent) {
-      const displayDenom = this.network.displayDenom;
-      const displayDenomExponent = this.network.displayDenomExponent;
-      if (denom === displayDenom) {
-        const displayAmount = BigInt(parseFloat(amount) * Math.pow(10, displayDenomExponent));
-        amount = displayAmount.toString();
-        denom = this.network.denom;
-      }
+  /**
+   * Undelegate (unstake) tokens from a validator
+   */
+  async undelegateTokens(params: StakeParams): Promise<TransactionResponse> {
+    if (!this.stakingService) {
+      throw new Error('Client not initialized. Call initialize() first.');
     }
-    
-    const coin: Coin = {
-      denom,
-      amount
-    };
+    return this.stakingService.undelegateTokens(params);
+  }
 
-    try {
-      const result = await this.stargateClient.delegateTokens(
-        this.address,
-        operatorAddress,
-        coin,
-        'auto',
-        memo
-      );
-
-      return {
-        transactionHash: result.transactionHash,
-        explorerUrl: `${this.network.explorerUrl}/tx/${result.transactionHash}`,
-        success: result.code === 0,
-        gasUsed: result.gasUsed.toString(),
-        gasWanted: result.gasWanted.toString(),
-      };
-    } catch (error) {
-      throw new Error(`Failed to stake tokens: ${error instanceof Error ? error.message : String(error)}`);
+  /**
+   * Claim rewards for the address
+   */
+  async claimRewards(params: ClaimRewardsParams): Promise<TransactionResponse> {
+    if (!this.stakingService) {
+      throw new Error('Client not initialized. Call initialize() first.');
     }
+    return this.stakingService.claimRewards(params);
   }
 
   /**
    * Get the current address
    */
   async getCurrentAddressInfo() {
-    if (!this.address) {
-      throw new Error('No address set.');
+    if (!this.networkService) {
+      throw new Error('Client not initialized. Call initialize() first.');
     }
-    return {
-      address: this.address,
-      network: this.network,
-      explorerUrl: `${this.network?.explorerUrl}/address/${this.address}`,
-    };
+    return this.networkService.getCurrentAddressInfo();
+  }
+
+  /**
+   * Get the current block height
+   */
+  async getBlockInfo(height?: number) {
+    if (!this.networkService) {
+      throw new Error('Client not initialized. Call initialize() first.');
+    }
+    return this.networkService.getBlockInfo(height);
+  }
+
+  /**
+   * Send IBC transfer
+   * @param params Parameters for the IBC transfer
+   */
+  async sendIBCTransfer(params: IBCTransferParams): Promise<TransactionResponse> {
+    if (!this.ibcService) {
+      throw new Error('Client not initialized. Call initialize() first.');
+    }
+    return this.ibcService.sendIBCTransfer(params);
   }
 
   /**
@@ -208,27 +235,38 @@ export class MantraClient {
    * @param memo Optional memo to include with the transaction
    */
   async signAndBroadcast(messages: EncodeObject[], memo = ''): Promise<TransactionResponse> {
-    if (!this.stargateClient || !this.address || !this.network) {
+    if (!this.txService) {
       throw new Error('Client not initialized. Call initialize() first.');
     }
+    return this.txService.signAndBroadcast(messages, memo);
+  }
 
-    try {      
-      const result = await this.stargateClient.signAndBroadcast(
-        this.address,
-        messages,
-        'auto',
-        memo
-      );
-
-      return {
-        transactionHash: result.transactionHash,
-        explorerUrl: `${this.network.explorerUrl}/tx/${result.transactionHash}`,
-        success: result.code === 0,
-        gasUsed: result.gasUsed.toString(),
-        gasWanted: result.gasWanted.toString(),
-      };
-    } catch (error) {
-      throw new Error(`Failed to sign and broadcast transaction: ${error instanceof Error ? error.message : String(error)}`);
+  /**
+   * Query a smart contract by executing a read-only function
+   * @param params Parameters for the contract query
+   */
+  async queryContract(params: ContractQueryParams): Promise<any> {
+    if (!this.contractService) {
+      throw new Error('Client not initialized. Call initialize() first.');
     }
+    return this.contractService.queryContract(params);
+  }
+
+  /**
+   * Execute a function on a smart contract that changes state
+   * @param params Parameters for the contract execution
+   */
+  async executeContract(
+    params: ContractExecuteParams
+  ): Promise<{ transactionHash: string }> {
+    if (!this.contractService) {
+      throw new Error('Client not initialized. Call initialize() first.');
+    }
+    
+    const result = await this.contractService.executeContract(params);
+    
+    return {
+      transactionHash: result.transactionHash
+    };
   }
 }

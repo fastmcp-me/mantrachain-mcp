@@ -1,6 +1,6 @@
 {
   "name": "mantrachain-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Model Context Protocol server for MantraChain (Cosmos SDK)",
   "main": "build/index.js",
   "type": "module",
@@ -29,6 +29,7 @@
     "@cosmjs/stargate": "^0.33.1",
     "@cosmjs/tendermint-rpc": "^0.33.1",
     "@modelcontextprotocol/sdk": "^1.8.0",
+    "cosmjs-types": "^0.9.0",
     "dotenv": "^16.4.7",
     "zod": "^3.24.2"
   },

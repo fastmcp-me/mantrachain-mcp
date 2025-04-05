@@ -6,6 +6,7 @@ dotenv.config();
 
 export interface NetworkConfig {
   rpcEndpoint: string;
+  apiEndpoint: string;
   chainId: string;
   prefix: string;
   denom: string;
@@ -20,7 +21,8 @@ export interface NetworkConfig {
 // Network configurations
 const NETWORKS: Record<string, NetworkConfig> = {
   "mantra-dukong-1": {
-    rpcEndpoint: 'https://rpc.dukong.mantrachain.io:443',
+    rpcEndpoint: 'https://rpc.dukong.mantrachain.io',
+    apiEndpoint: 'https://api.dukong.mantrachain.io',
     chainId: 'mantra-dukong-1',
     prefix: 'mantra',
     denom: 'uom',
@@ -32,12 +34,14 @@ const NETWORKS: Record<string, NetworkConfig> = {
     explorerUrl: 'https://www.mintscan.io/mantra-testnet'
   },
   "mantra-1": {
-    rpcEndpoint: 'https://rpc.mantrachain.io:443',
+    rpcEndpoint: 'https://rpc.mantrachain.io',
+    apiEndpoint: 'https://api.mantrachain.io',
     chainId: 'mantra-1',
     prefix: 'mantra',
     denom: 'uom',
     gasPrice: '0.01',
     isMainnet: true,
+    defaultNetwork: false,
     displayDenom: 'om',
     displayDenomExponent: 6,
     explorerUrl: 'https://www.mintscan.io/mantra'

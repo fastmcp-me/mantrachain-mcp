@@ -54,7 +54,7 @@ A Model Context Protocol (MCP) server for interacting with MantraChain (Cosmos S
 
 ## MCP Configuration
 
-To integrate with MCP client applications, add the server configuration to your MCP client configuration file:
+### To integrate with MCP client applications, add the server configuration to your MCP client configuration file:
 
 ```json
 {
@@ -67,16 +67,21 @@ To integrate with MCP client applications, add the server configuration to your 
       ],
       "env": {
         "MNEMONIC": "YOUR_MNEMONIC",
-        "CUSTOM_NETWORKS": "{\"rpcEndpoint\":\"https://my-rpc-endpoint.example.com\",\"chainId\":\"my-chain-1\",\"prefix\":\"mychain\",\"denom\":\"utoken\",\"gasPrice\":\"0.01\",\"isMainnet\":false,\"displayDenom\":\"token\",\"displayDenomExponent\":6,\"explorerUrl\":\"https://explorer.example.com\"}"
-      },
-      "disabled": false,
-      "autoApprove": []
+        "CUSTOM_NETWORKS": "{\"my-custom-net\":{\"rpcEndpoint\":\"https://rpc.custom-network.io\",\"apiEndpoint\":\"https://api.custom-network.io\",\"chainId\":\"my-custom-net-1\",\"prefix\":\"custom\",\"denom\":\"ucustom\",\"gasPrice\":\"0.01\",\"isMainnet\":false}}"
+      }
     }
   }
 }
 ```
 
-If you installed the package locally instead of globally:
+### If you build the package locally instead of globally
+
+After building the package, you can run it directly from the build directory. Make sure to replace `your_path` with the actual path to your build directory.
+```bash
+npm run build
+```
+
+Then, you can use the following configuration:
 
 ```json
 {
@@ -88,9 +93,7 @@ If you installed the package locally instead of globally:
       ],
       "env": {
         "MNEMONIC": "YOUR_MNEMONIC"
-      },
-      "disabled": false,
-      "autoApprove": []
+      }
     }
   }
 }

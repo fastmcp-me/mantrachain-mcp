@@ -9,7 +9,7 @@ export async function startMCPServer() {
   // Create MCP server
   const server = new McpServer({
     name: 'MantraChain MCP Server - interact with the blockchain',
-    version: '1.0.2',
+    version: '1.0.3',
   });
 
   // Register all tools and resources

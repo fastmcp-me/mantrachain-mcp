@@ -10,6 +10,7 @@ import { NetworkService } from './services/network-service.js';
 import { TxService } from './services/tx-service.js';
 import { IBCService, IBCTransferParams } from './services/ibc-service.js';
 import { ContractService, ContractQueryParams, ContractExecuteParams } from './services/contract-service.js';
+import { DexService, SwapParams, PoolInfo, SwapOperation } from './services/dex-service.js';
 
 export class MantraClient {
   private wasmClient: SigningCosmWasmClient | null = null;
@@ -26,6 +27,7 @@ export class MantraClient {
   private txService: TxService | null = null;
   private ibcService: IBCService | null = null;
   private contractService: ContractService | null = null;
+  private dexService: DexService | null = null;  // Add DEX service
 
   async initialize(networkName: string) {
     if (!Object.keys(networks).includes(networkName)) {
@@ -36,25 +38,12 @@ export class MantraClient {
     const wallet = await getWallet(networkName);
     const [firstAccount] = await wallet.getAccounts();
     this.address = firstAccount.address;
-
     const gasPrice = GasPrice.fromString(`${this.network.gasPrice}${this.network.denom}`);
-    
-    this.wasmClient = await SigningCosmWasmClient.connectWithSigner(
-      this.network.rpcEndpoint,
-      wallet,
-      { gasPrice }
-    );
-
-    this.stargateClient = await SigningStargateClient.connectWithSigner(
-      this.network.rpcEndpoint,
-      wallet,
-      { gasPrice }
-    );
-
+    this.wasmClient = await SigningCosmWasmClient.connectWithSigner(this.network.rpcEndpoint, wallet, { gasPrice });
+    this.stargateClient = await SigningStargateClient.connectWithSigner(this.network.rpcEndpoint, wallet, { gasPrice });
     this.cometClient = await Comet38Client.connect(this.network.rpcEndpoint);
-
     this.queryClient = QueryClient.withExtensions(
-      this.cometClient,
+      this.cometClient, 
       setupStakingExtension,
       setupDistributionExtension,
     );
@@ -102,6 +91,15 @@ export class MantraClient {
         this.network
       );
       this.contractService = new ContractService(
+        this.stargateClient,
+        this.wasmClient,
+        this.queryClient,
+        this.cometClient,
+        this.address,
+        this.network
+      );
+      // Initialize DEX service
+      this.dexService = new DexService(
         this.stargateClient,
         this.wasmClient,
         this.queryClient,
@@ -268,5 +266,45 @@ export class MantraClient {
     return {
       transactionHash: result.transactionHash
     };
+  }
+
+  /**
+   * Get all DEX pools
+   */
+  async getPools(): Promise<PoolInfo[]> {
+    if (!this.dexService) {
+      throw new Error('Client not initialized. Call initialize() first.');
+    }
+    return this.dexService.getPools();
+  }
+
+  /**
+   * Find swap routes between two tokens
+   */
+  async findSwapRoutes(tokenInDenom: string, tokenOutDenom: string): Promise<SwapOperation[][]> {
+    if (!this.dexService) {
+      throw new Error('Client not initialized. Call initialize() first.');
+    }
+    return this.dexService.findRoutes(tokenInDenom, tokenOutDenom);
+  }
+
+  /**
+   * Simulate a token swap
+   */
+  async simulateSwap(params: SwapParams): Promise<{ expectedReturn: string, routes: SwapOperation[] }> {
+    if (!this.dexService) {
+      throw new Error('Client not initialized. Call initialize() first.');
+    }
+    return this.dexService.simulateSwap(params);
+  }
+
+  /**
+   * Execute a token swap
+   */
+  async swap(params: SwapParams): Promise<TransactionResponse> {
+    if (!this.dexService) {
+      throw new Error('Client not initialized. Call initialize() first.');
+    }
+    return this.dexService.swap(params);
   }
 }

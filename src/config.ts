@@ -16,6 +16,7 @@ export interface NetworkConfig {
   displayDenom?: string;
   displayDenomExponent?: number;
   explorerUrl?: string;
+  dexContractAddress?: string;
 }
 
 // Network configurations
@@ -31,7 +32,8 @@ const NETWORKS: Record<string, NetworkConfig> = {
     defaultNetwork: true,
     displayDenom: 'om',
     displayDenomExponent: 6,
-    explorerUrl: 'https://www.mintscan.io/mantra-testnet'
+    explorerUrl: 'https://www.mintscan.io/mantra-testnet',
+    dexContractAddress: 'mantra1us7rryvauhpe82fff0t6gjthdraqmtm5gw8c808f6eqzuxmulacqzkzdal'
   },
   "mantra-1": {
     rpcEndpoint: 'https://rpc.mantrachain.io',
@@ -44,7 +46,8 @@ const NETWORKS: Record<string, NetworkConfig> = {
     defaultNetwork: false,
     displayDenom: 'om',
     displayDenomExponent: 6,
-    explorerUrl: 'https://www.mintscan.io/mantra'
+    explorerUrl: 'https://www.mintscan.io/mantra',
+    dexContractAddress: 'mantra1466nf3zuxpya8q9emxukd7vftaf6h4psr0a07srl5zw74zh84yjqagspfm'
   },
 };
 

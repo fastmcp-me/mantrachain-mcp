@@ -6,6 +6,7 @@ import { registerNetworkTools } from './network.js';
 import { registerResources } from './resources.js';
 import { registerIBCTools } from './ibc.js';
 import { registerContractTools } from './contract.js';
+import { registerDexTools } from './dex.js'; // Add this import
 
 export function registerAllTools(server: McpServer, mantraClient: MantraClient) {
   // Register resources first
@@ -17,4 +18,5 @@ export function registerAllTools(server: McpServer, mantraClient: MantraClient) 
   registerNetworkTools(server, mantraClient);
   registerIBCTools(server, mantraClient);
   registerContractTools(server, mantraClient);
+  registerDexTools(server, mantraClient);
 }

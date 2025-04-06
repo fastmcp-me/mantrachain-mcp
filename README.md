@@ -38,6 +38,12 @@ A Model Context Protocol (MCP) server for interacting with MantraChain (Cosmos S
 - **contract-query**: Query a smart contract by executing a read-only function
 - **contract-execute**: Execute a function on a smart contract that changes state
 
+### DEX Operations
+- **dex-get-pools**: Get all available liquidity pools from the DEX
+- **dex-find-routes**: Find available swap routes between two tokens
+- **dex-simulate-swap**: Simulate a token swap to get expected outcome without executing it
+- **dex-swap**: Execute a token swap on the DEX with slippage protection
+
 ### Transaction Operations
 - **sign-and-broadcast**: Sign and broadcast a generic transaction
 

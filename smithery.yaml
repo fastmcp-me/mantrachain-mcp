@@ -1,0 +1,30 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - MNEMONIC
+    properties:
+      MNEMONIC:
+        type: string
+        description: The mnemonic seed phrase for wallet
+      CUSTOM_NETWORKS:
+        type: string
+        description: Optional JSON string containing additional network configurations
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['build/index.js'],
+      env: {
+        MNEMONIC: config.MNEMONIC,
+        CUSTOM_NETWORKS: config.CUSTOM_NETWORKS || ''
+      }
+    })
+  exampleConfig:
+    MNEMONIC: example mnemonic seed phrase goes here
+    CUSTOM_NETWORKS: '{"my-custom-net":{"rpcEndpoint":"https://rpc.custom-network.io","apiEndpoint":"https://api.custom-network.io","chainId":"my-custom-net-1","prefix":"custom","denom":"ucustom","gasPrice":"0.01","isMainnet":false}}'

@@ -1,5 +1,7 @@
 # MantraChain MCP Server
 
+[![smithery badge](https://smithery.ai/badge/@allthatjazzleo/mantrachain-mcp)](https://smithery.ai/server/@allthatjazzleo/mantrachain-mcp)
+
 A Model Context Protocol (MCP) server for interacting with MantraChain (Cosmos SDK) blockchain. This server provides tools for sending tokens, delegating to validators, querying balances, and more using the MCP protocol.
 
 ## Features
@@ -53,6 +55,14 @@ A Model Context Protocol (MCP) server for interacting with MantraChain (Cosmos S
 - **openapi://{networkName}**: OpenAPI/Swagger specification for the specified network
 
 ## MCP Configuration
+
+### Installing via Smithery
+
+To install MantraChain MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@allthatjazzleo/mantrachain-mcp):
+
+```bash
+npx -y @smithery/cli install @allthatjazzleo/mantrachain-mcp --client claude
+```
 
 ### To integrate with MCP client applications, add the server configuration to your MCP client configuration file:
 

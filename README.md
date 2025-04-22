@@ -13,6 +13,7 @@ A Model Context Protocol (MCP) server for interacting with MantraChain (Cosmos S
 - Sign and broadcast arbitrary transactions
 - Configure mnemonic and network via environment variables
 - Choose between Dukong testnet and Mainnet
+- **Supports both stdio and HTTP+SSE transport modes**
 
 ## Available Tools
 
@@ -54,6 +55,35 @@ A Model Context Protocol (MCP) server for interacting with MantraChain (Cosmos S
 - **networks://all**: JSON resource showing all available networks with their configuration
 - **openapi://{networkName}**: OpenAPI/Swagger specification for the specified network
 
+## Running the Server
+
+The server can run in two modes:
+
+1.  **Stdio Mode (Default):** Communicates over standard input/output. This is the default mode when running the server directly or via `npx`.
+    ```bash
+    # Using installed package
+    mantrachain-mcp
+
+    # Using npx
+    npx -y mantrachain-mcp@latest
+
+    ```
+
+2.  **HTTP+SSE Mode:** Runs an HTTP server on port 3000, communicating via Server-Sent Events (SSE). Activate this mode using the `-r` flag or the dedicated npm scripts.
+    ```bash
+    # Using installed package
+    mantrachain-mcp -r
+
+    # Using npx
+    export MNEMONIC="YOUR_MNEMONIC"
+    export CUSTOM_NETWORKS="YOUR_CUSTOM_NETWORKS_JSON"
+    npx -y mantrachain-mcp@latest -- -r
+
+    ```
+    When running in HTTP mode, the server listens on:
+    - `GET /sse`: Establishes the SSE connection.
+    - `POST /messages?sessionId=<id>`: Receives client requests.
+
 ## MCP Configuration
 
 ### Installing via Smithery
@@ -83,6 +113,20 @@ npx -y @smithery/cli install @allthatjazzleo/mantrachain-mcp --client claude
   }
 }
 ```
+
+### Connecting remote MCP server in [cline](https://docs.cline.bot/mcp-servers/connecting-to-a-remote-server):
+
+```json
+{
+  "mcpServers": {
+    "mantrachain-mcp-sse": {
+      "url": "http://localhost:3000/sse",
+      "transportType": "sse"
+    }
+  }
+}
+```
+
 
 ### If you build the package locally instead of globally
 

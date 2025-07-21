@@ -1,5 +1,5 @@
-import { Coin } from '@cosmjs/proto-signing';
-import { MsgTransferEncodeObject } from '@cosmjs/stargate';
+import { Coin } from '@allthatjazzleo/proto-signing';
+import { MsgTransferEncodeObject } from '@allthatjazzleo/stargate';
 import { BaseService } from './base-service.js';
 import { TransactionResponse } from '../types.js';
 import { MsgTransfer } from "cosmjs-types/ibc/applications/transfer/v1/tx.js";

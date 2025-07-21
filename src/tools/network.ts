@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import * as services from '../evm-services/index.js';
 import { MantraClient } from '../mantra-client.js';
 import { networks } from '../config.js';
 
@@ -11,7 +12,7 @@ export function registerNetworkTools(server: McpServer, mantraClient: MantraClie
     {
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
-      }).describe("Name of the network to use - must first check what networks are available through the mantrachain-mcp server by accessing the networks resource `networks://all` before you pass this arguments"),
+      }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
     },
     async ({ networkName }) => {
       await mantraClient.initialize(networkName);
@@ -25,11 +26,11 @@ export function registerNetworkTools(server: McpServer, mantraClient: MantraClie
   // Define get current block info tool
   server.tool(
     "get-block-info",
-    "Get block information",
+    "Get block information from cometbft rpc",
     {
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
-      }).describe("Name of the network to use - must first check what networks are available through the mantrachain-mcp server by accessing the networks resource `networks://all` before you pass this arguments"),
+      }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
       height: z.number().optional().describe("Optional block height to query, defaults to latest block"),
     },
     async ({ networkName, height }) => {
@@ -41,6 +42,42 @@ export function registerNetworkTools(server: McpServer, mantraClient: MantraClie
     }
   );
 
+	// Get block from evm
+	server.tool(
+		'get-block-info-evm',
+		'Get a block information from EVM rpc',
+		{
+      networkName: z.string().refine(val => Object.keys(networks).includes(val), {
+        message: "Must be a valid network name"
+      }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+      height: z.number().optional().describe("Optional block height to query, defaults to latest block"),
+		},
+		async ({ height, networkName }) => {
+			try {
+				const block = await services.getBlockByNumber(height, networkName);
+
+				return {
+					content: [
+						{
+							type: 'text',
+							text: services.helpers.formatJson(block)
+						}
+					]
+				};
+			} catch (error) {
+				return {
+					content: [
+						{
+							type: 'text',
+							text: `Error fetching block ${height}: ${error instanceof Error ? error.message : String(error)}`
+						}
+					],
+					isError: true
+				};
+			}
+		}
+	);
+
   // Define generic network query tool
   server.tool(
     "query-network",
@@ -48,7 +85,7 @@ export function registerNetworkTools(server: McpServer, mantraClient: MantraClie
     {
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
-      }).describe("Name of the network to use - must first check what networks are available through the mantrachain-mcp server by accessing the networks resource `networks://all` before you pass this arguments"),
+      }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
       path: z.string().describe("API endpoint path from the OpenAPI spec, e.g., '/cosmos/bank/v1beta1/balances/{address}'"),
       method: z.enum(["GET", "POST", "PUT", "DELETE"]).describe("HTTP method to use for the request"),
       pathParams: z.record(z.string()).optional().describe("Path parameters to substitute in the URL path"),

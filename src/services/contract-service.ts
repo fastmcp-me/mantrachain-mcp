@@ -1,5 +1,5 @@
-import { SigningStargateClient, QueryClient, StakingExtension, DistributionExtension } from '@cosmjs/stargate';
-import { JsonObject, SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { SigningStargateClient, QueryClient, StakingExtension, DistributionExtension } from '@allthatjazzleo/stargate';
+import { JsonObject, SigningCosmWasmClient } from '@allthatjazzleo/cosmwasm-stargate';
 import { NetworkConfig } from '../config.js';
 import { Comet38Client } from '@cosmjs/tendermint-rpc';
 import { BaseService } from './base-service.js';

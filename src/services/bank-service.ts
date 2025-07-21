@@ -1,4 +1,4 @@
-import { Coin } from '@cosmjs/proto-signing';
+import { Coin } from '@allthatjazzleo/proto-signing';
 import { BaseService } from './base-service.js';
 import { TransactionResponse } from '../types.js';
 

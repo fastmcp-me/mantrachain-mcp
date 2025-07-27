@@ -25,7 +25,7 @@ export function registerIBCTools(server: McpServer, mantraClient: MantraClient) 
       memo: z.string().optional().describe("Optional memo for the transaction"),
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
-      }).describe("Name of the network to use - must first check what networks are available through the mantrachain-mcp server by accessing the networks resource `networks://all` before you pass this arguments"),
+      }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
     },
     async ({ recipientAddress, transferAmount, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, ibcMemo, memo, networkName }) => {
       await mantraClient.initialize(networkName);

@@ -1,7 +1,7 @@
-import { SigningStargateClient, QueryClient, setupStakingExtension, StakingExtension, setupDistributionExtension, DistributionExtension, GasPrice } from '@cosmjs/stargate';
-import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
-import { Coin, EncodeObject } from '@cosmjs/proto-signing';
-import { getWallet, networks, NetworkConfig } from './config.js';
+import { SigningStargateClient, QueryClient, setupStakingExtension, StakingExtension, setupDistributionExtension, DistributionExtension, GasPrice } from '@allthatjazzleo/stargate';
+import { SigningCosmWasmClient } from '@allthatjazzleo/cosmwasm-stargate';
+import { EncodeObject } from '@allthatjazzleo/proto-signing';
+import { getWallet, getEvmWallet, networks, NetworkConfig } from './config.js';
 import { Comet38Client } from '@cosmjs/tendermint-rpc';
 import { TransactionResponse } from './types.js';
 import { BankService, BankSendParams } from './services/bank-service.js';

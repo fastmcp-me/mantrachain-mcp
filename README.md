@@ -20,8 +20,13 @@ A Model Context Protocol (MCP) server for interacting with MantraChain (Cosmos S
 ## Available Tools
 
 ### Bank Operations
-- **bank-send**: Send tokens to another address
+- **bank-send**: Send tokens to another address (supports multiple coins per transaction)
 - **get-balance**: Get balance of an address (defaults to your own address if none provided)
+- **get_evm_balance**: Get native token (OM) balance for an EVM address
+- **get_token_balance**: Get ERC20 token balance for an address
+- **get_nft_balance**: Get ERC721 NFT count for an address from a collection
+- **get_erc1155_balance**: Get ERC1155 token balance for a specific token ID
+- **get_address_from_mnemonic**: Get EVM address derived from mnemonic
 
 ### Staking Operations
 - **delegate**: Delegate/Stake tokens to a validator
@@ -33,15 +38,20 @@ A Model Context Protocol (MCP) server for interacting with MantraChain (Cosmos S
 
 ### Network Operations
 - **get-account-info**: Get current account information
-- **get-block-info**: Get block information
+- **get-block-info**: Get block information from Cosmos (cometbft) RPC
+- **get-block-info-evm**: Get block information from EVM RPC
 - **query-network**: Execute a generic network query against chain APIs
 
 ### IBC Operations
 - **ibc-transfer**: Send tokens via IBC transfer
 
 ### Smart Contract Operations
-- **contract-query**: Query a smart contract by executing a read-only function
-- **contract-execute**: Execute a function on a smart contract that changes state
+- **cosmwasm-contract-query**: Query a CosmWasm smart contract (read-only)
+- **cosmwasm-contract-execute**: Execute a function on a CosmWasm contract (state-changing)
+- **read_evm_contract**: Read data from an EVM contract (view/pure function)
+- **write_evm_contract**: Write data to an EVM contract (state-changing function)
+- **deploy_evm_contract**: Deploy a new EVM contract
+- **is_contract**: Check if an address is a contract or EOA
 
 ### DEX Operations
 - **dex-get-pools**: Get all available liquidity pools from the DEX
@@ -50,7 +60,16 @@ A Model Context Protocol (MCP) server for interacting with MantraChain (Cosmos S
 - **dex-swap**: Execute a token swap on the DEX with slippage protection
 
 ### Transaction Operations
-- **sign-and-broadcast**: Sign and broadcast a generic transaction
+- **sign-and-broadcast**: Sign and broadcast a generic Cosmos transaction
+- **get_transaction**: Get detailed information about a specific EVM transaction by hash
+- **get_transaction_receipt**: Get EVM transaction receipt by hash
+- **estimate_gas**: Estimate gas cost for a transaction
+- **transfer_om**: Transfer native tokens (OM) via EVM
+- **transfer_erc20**: Transfer ERC20 tokens to another address
+- **approve_token_spending**: Approve another address to spend your ERC20 tokens
+- **transfer_nft**: Transfer an ERC721 NFT to another address
+- **transfer_erc1155**: Transfer ERC1155 tokens to another address
+- **transfer_token**: Transfer ERC20 tokens to an address
 
 ## Available Resources
 
@@ -71,20 +90,16 @@ The server can run in two modes:
 
     ```
 
-2.  **HTTP+SSE Mode:** Runs an HTTP server on port 3000, communicating via Server-Sent Events (SSE). Activate this mode using the `-r` flag or the dedicated npm scripts.
+2.  **Streamable HTTP Mode:** Runs an HTTP server on port 3000, communicating via Server-Sent Events (SSE). Activate this mode using the `--http` flag or the dedicated npm scripts.
     ```bash
     # Using installed package
-    mantrachain-mcp -r
+    mantrachain-mcp --http
 
     # Using npx
     export MNEMONIC="YOUR_MNEMONIC"
     export CUSTOM_NETWORKS="YOUR_CUSTOM_NETWORKS_JSON"
-    npx -y mantrachain-mcp@latest -- -r
-
+    npx -y mantrachain-mcp@latest -- --http
     ```
-    When running in HTTP mode, the server listens on:
-    - `GET /sse`: Establishes the SSE connection.
-    - `POST /messages?sessionId=<id>`: Receives client requests.
 
 ## MCP Configuration
 

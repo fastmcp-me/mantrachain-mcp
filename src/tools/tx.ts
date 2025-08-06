@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { Address, Hash, Hex } from 'viem';
+import { parseGwei } from 'viem';
 import * as services from '../evm-services/index.js';
 import { MantraClient } from '../mantra-client.js';
 import { networks } from '../config.js';
@@ -175,13 +176,20 @@ export function registerTxTools(server: McpServer, mantraClient: MantraClient) {
 		{
 			to: z.string().describe("The recipient address (e.g., '0x1234...'"),
 			amount: z.string().describe("Amount to send in OM (or the native token of the network), as a string (e.g., '0.1')"),
-      networkName: z.string().refine(val => Object.keys(networks).includes(val), {
-        message: "Must be a valid network name"
-      }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			networkName: z.string().refine(val => Object.keys(networks).includes(val), {
+				message: "Must be a valid network name"
+			}).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			maxFeePerGas: z.string().optional().describe("Maximum fee per gas unit in Gwei (e.g., '20' for 20 Gwei)"),
+			maxPriorityFeePerGas: z.string().optional().describe("Maximum priority fee per gas unit in Gwei (e.g., '2' for 2 Gwei)"),
 		},
-		async ({ to, amount, networkName }) => {
+		async ({ to, amount, networkName, maxFeePerGas, maxPriorityFeePerGas }) => {
 			try {
-				const txHash = await services.transferOM(to, amount, networkName);
+				const gasParams = {
+					maxFeePerGas: maxFeePerGas ? parseGwei(maxFeePerGas) : undefined,
+					maxPriorityFeePerGas: maxPriorityFeePerGas ? parseGwei(maxPriorityFeePerGas) : undefined,
+				};
+
+				const txHash = await services.transferOM(to, amount, networkName, gasParams);
 
 				return {
 					content: [
@@ -223,13 +231,20 @@ export function registerTxTools(server: McpServer, mantraClient: MantraClient) {
 			tokenAddress: z.string().describe('The address of the ERC20 token contract'),
 			toAddress: z.string().describe('The recipient address'),
 			amount: z.string().describe("The amount of tokens to send (in token units, e.g., '10' for 10 tokens)"),
-      networkName: z.string().refine(val => Object.keys(networks).includes(val), {
-        message: "Must be a valid network name"
-      }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			networkName: z.string().refine(val => Object.keys(networks).includes(val), {
+				message: "Must be a valid network name"
+			}).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			maxFeePerGas: z.string().optional().describe("Maximum fee per gas unit in Gwei (e.g., '20' for 20 Gwei)"),
+			maxPriorityFeePerGas: z.string().optional().describe("Maximum priority fee per gas unit in Gwei (e.g., '2' for 2 Gwei)"),
 		},
-		async ({ tokenAddress, toAddress, amount, networkName }) => {
+		async ({ tokenAddress, toAddress, amount, networkName, maxFeePerGas, maxPriorityFeePerGas }) => {
 			try {
-				const result = await services.transferERC20(tokenAddress, toAddress, amount, networkName);
+				const gasParams = {
+					maxFeePerGas: maxFeePerGas ? parseGwei(maxFeePerGas) : undefined,
+					maxPriorityFeePerGas: maxPriorityFeePerGas ? parseGwei(maxPriorityFeePerGas) : undefined,
+				};
+
+				const result = await services.transferERC20(tokenAddress, toAddress, amount, networkName, gasParams);
 
 				return {
 					content: [
@@ -280,10 +295,17 @@ export function registerTxTools(server: McpServer, mantraClient: MantraClient) {
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
       }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			maxFeePerGas: z.string().optional().describe("Maximum fee per gas unit in Gwei (e.g., '20' for 20 Gwei)"),
+			maxPriorityFeePerGas: z.string().optional().describe("Maximum priority fee per gas unit in Gwei (e.g., '2' for 2 Gwei)"),
 		},
-		async ({ tokenAddress, spenderAddress, amount, networkName }) => {
+		async ({ tokenAddress, spenderAddress, amount, networkName, maxFeePerGas, maxPriorityFeePerGas }) => {
 			try {
-				const result = await services.approveERC20(tokenAddress, spenderAddress, amount, networkName);
+				const gasParams = {
+					maxFeePerGas: maxFeePerGas ? parseGwei(maxFeePerGas) : undefined,
+					maxPriorityFeePerGas: maxPriorityFeePerGas ? parseGwei(maxPriorityFeePerGas) : undefined,
+				};
+
+				const result = await services.approveERC20(tokenAddress, spenderAddress, amount, networkName, gasParams);
 
 				return {
 					content: [
@@ -330,10 +352,17 @@ export function registerTxTools(server: McpServer, mantraClient: MantraClient) {
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
       }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			maxFeePerGas: z.string().optional().describe("Maximum fee per gas unit in Gwei (e.g., '20' for 20 Gwei)"),
+			maxPriorityFeePerGas: z.string().optional().describe("Maximum priority fee per gas unit in Gwei (e.g., '2' for 2 Gwei)"),
 		},
-		async ({ tokenAddress, tokenId, toAddress, networkName }) => {
+		async ({ tokenAddress, tokenId, toAddress, networkName, maxFeePerGas, maxPriorityFeePerGas }) => {
 			try {
-				const result = await services.transferERC721(tokenAddress, toAddress, BigInt(tokenId), networkName);
+				const gasParams = {
+					maxFeePerGas: maxFeePerGas ? parseGwei(maxFeePerGas) : undefined,
+					maxPriorityFeePerGas: maxPriorityFeePerGas ? parseGwei(maxPriorityFeePerGas) : undefined,
+				};
+
+				const result = await services.transferERC721(tokenAddress, toAddress, BigInt(tokenId), networkName, gasParams);
 
 				return {
 					content: [
@@ -382,10 +411,17 @@ export function registerTxTools(server: McpServer, mantraClient: MantraClient) {
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
       }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			maxFeePerGas: z.string().optional().describe("Maximum fee per gas unit in Gwei (e.g., '20' for 20 Gwei)"),
+			maxPriorityFeePerGas: z.string().optional().describe("Maximum priority fee per gas unit in Gwei (e.g., '2' for 2 Gwei)"),
 		},
-		async ({ tokenAddress, tokenId, amount, toAddress, networkName }) => {
+		async ({ tokenAddress, tokenId, amount, toAddress, networkName, maxFeePerGas, maxPriorityFeePerGas }) => {
 			try {
-				const result = await services.transferERC1155(tokenAddress, toAddress, BigInt(tokenId), amount, networkName);
+				const gasParams = {
+					maxFeePerGas: maxFeePerGas ? parseGwei(maxFeePerGas) : undefined,
+					maxPriorityFeePerGas: maxPriorityFeePerGas ? parseGwei(maxPriorityFeePerGas) : undefined,
+				};
+
+				const result = await services.transferERC1155(tokenAddress, toAddress, BigInt(tokenId), amount, networkName, gasParams);
 
 				return {
 					content: [
@@ -432,10 +468,17 @@ export function registerTxTools(server: McpServer, mantraClient: MantraClient) {
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
       }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			maxFeePerGas: z.string().optional().describe("Maximum fee per gas unit in Gwei (e.g., '20' for 20 Gwei)"),
+			maxPriorityFeePerGas: z.string().optional().describe("Maximum priority fee per gas unit in Gwei (e.g., '2' for 2 Gwei)"),
 		},
-		async ({ tokenAddress, toAddress, amount, networkName }) => {
+		async ({ tokenAddress, toAddress, amount, networkName, maxFeePerGas, maxPriorityFeePerGas }) => {
 			try {
-				const result = await services.transferERC20(tokenAddress, toAddress, amount, networkName);
+				const gasParams = {
+					maxFeePerGas: maxFeePerGas ? parseGwei(maxFeePerGas) : undefined,
+					maxPriorityFeePerGas: maxPriorityFeePerGas ? parseGwei(maxPriorityFeePerGas) : undefined,
+				};
+
+				const result = await services.transferERC20(tokenAddress, toAddress, amount, networkName, gasParams);
 
 				return {
 					content: [

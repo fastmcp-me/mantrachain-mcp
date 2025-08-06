@@ -13,14 +13,14 @@ export async function readContract(params: ReadContractParameters, network = DEF
 
 /**
  * Write to a contract for a specific network
- * @param params Contract parameters
+ * @param params Contract parameters including optional gas fee parameters
  * @param network Network name or chain ID
  * @returns Transaction hash
  * @throws Error if no private key is available
  */
 export async function writeContract(params: Record<string, any>, network = DEFAULT_NETWORK): Promise<Hash> {
 	const client = await getWalletClientFromProvider(network);
-	return await client.writeContract(params as any);
+	return await client.writeContract(params as WriteContractParameters);
 }
 
 /**
@@ -51,6 +51,7 @@ export async function isContract(address: string, network = DEFAULT_NETWORK): Pr
  * @param abi Contract ABI for constructor
  * @param args Constructor arguments (optional)
  * @param network Network name or chain ID
+ * @param gasParams Optional gas fee parameters
  * @returns Object with contract address and transaction hash
  * @throws Error if no private key is available or deployment fails
  */
@@ -58,7 +59,8 @@ export async function deployContract(
 	bytecode: Hex,
 	abi: any[],
 	args?: any[],
-	network = DEFAULT_NETWORK
+	network = DEFAULT_NETWORK,
+	gasParams?: { maxFeePerGas?: bigint; maxPriorityFeePerGas?: bigint }
 ): Promise<{ address: Hash; transactionHash: Hash }> {
 	const client = await getWalletClientFromProvider(network);
 	
@@ -66,14 +68,20 @@ export async function deployContract(
 		throw new Error('Wallet client account not available for contract deployment.');
 	}
 	
-	// Deploy the contract
-	const hash = await client.deployContract({
+	const deployParams: any = {
 		abi,
 		bytecode,
 		args: args || [],
 		account: client.account,
 		chain: client.chain,
-	});
+	};
+
+	// Add gas parameters if provided
+	if (gasParams?.maxFeePerGas) deployParams.maxFeePerGas = gasParams.maxFeePerGas;
+	if (gasParams?.maxPriorityFeePerGas) deployParams.maxPriorityFeePerGas = gasParams.maxPriorityFeePerGas;
+
+	// Deploy the contract
+	const hash = await client.deployContract(deployParams);
 
 	// Wait for the transaction to be mined and get the contract address
 	const publicClient = getPublicClient(network);

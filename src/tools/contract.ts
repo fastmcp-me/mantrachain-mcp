@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { Address, Hash, Hex } from 'viem';
+import { parseGwei } from 'viem';
 import * as services from '../evm-services/index.js';
 import { MantraClient } from '../mantra-client.js';
 import { networks } from '../config.js';
@@ -153,11 +154,13 @@ export function registerContractTools(server: McpServer, mantraClient: MantraCli
 			abi: z.array(z.unknown()).describe('The ABI (Application Binary Interface) of the smart contract function, as a JSON array'),
 			functionName: z.string().describe("The name of the function to call on the contract (e.g., 'transfer')"),
 			args: z.array(z.unknown()).describe("The arguments to pass to the function, as an array (e.g., ['0x1234...', '1000000000000000000'])"),
-      networkName: z.string().refine(val => Object.keys(networks).includes(val), {
-        message: "Must be a valid network name"
-      }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			networkName: z.string().refine(val => Object.keys(networks).includes(val), {
+				message: "Must be a valid network name"
+			}).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			maxFeePerGas: z.string().optional().describe("Maximum fee per gas unit in Gwei (e.g., '20' for 20 Gwei)"),
+			maxPriorityFeePerGas: z.string().optional().describe("Maximum priority fee per gas unit in Gwei (e.g., '2' for 2 Gwei)"),
 		},
-		async ({ contractAddress, abi, functionName, args, networkName }) => {
+		async ({ contractAddress, abi, functionName, args, networkName, maxFeePerGas, maxPriorityFeePerGas }) => {
 			try {
 				// Parse ABI if it's a string
 				const parsedAbi = typeof abi === 'string' ? JSON.parse(abi) : abi;
@@ -168,6 +171,10 @@ export function registerContractTools(server: McpServer, mantraClient: MantraCli
 					functionName,
 					args
 				};
+
+				// Add optional gas parameters
+				if (maxFeePerGas) contractParams.maxFeePerGas = parseGwei(maxFeePerGas);
+				if (maxPriorityFeePerGas) contractParams.maxPriorityFeePerGas = parseGwei(maxPriorityFeePerGas);
 
 				const txHash = await services.writeContract(contractParams, networkName);
 
@@ -217,8 +224,10 @@ export function registerContractTools(server: McpServer, mantraClient: MantraCli
       networkName: z.string().refine(val => Object.keys(networks).includes(val), {
         message: "Must be a valid network name"
       }).describe("Name of the network to use - must first check what networks are available by accessing the networks resource `networks://all` before you pass this arguments. Defaults to `mantra-dukong-1` testnet."),
+			maxFeePerGas: z.string().optional().describe("Maximum fee per gas unit in Gwei (e.g., '20' for 20 Gwei)"),
+			maxPriorityFeePerGas: z.string().optional().describe("Maximum priority fee per gas unit in Gwei (e.g., '2' for 2 Gwei)"),
 		},
-		async ({ bytecode, abi, args = [], networkName }) => {
+		async ({ bytecode, abi, args = [], networkName, maxFeePerGas, maxPriorityFeePerGas }) => {
 			try {
 				// Parse ABI if it's a string
 				const parsedAbi = typeof abi === 'string' ? JSON.parse(abi) : abi;
@@ -226,7 +235,12 @@ export function registerContractTools(server: McpServer, mantraClient: MantraCli
 				// Ensure bytecode is a proper hex string
 				const formattedBytecode = bytecode.startsWith('0x') ? (bytecode as Hex) : (`0x${bytecode}` as Hex);
 
-				const result = await services.deployContract(formattedBytecode, parsedAbi, args, networkName);
+				const gasParams = {
+					maxFeePerGas: maxFeePerGas ? parseGwei(maxFeePerGas) : undefined,
+					maxPriorityFeePerGas: maxPriorityFeePerGas ? parseGwei(maxPriorityFeePerGas) : undefined,
+				};
+
+				const result = await services.deployContract(formattedBytecode, parsedAbi, args, networkName, gasParams);
 
 				return {
 					content: [

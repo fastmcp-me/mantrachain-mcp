@@ -82,7 +82,7 @@ export async function getERC20TokenInfo(
 	name: string;
 	symbol: string;
 	decimals: number;
-	totalSupply: bigint;
+	totalSupply: string;
 	formattedTotalSupply: string;
 }> {
 	const publicClient = getPublicClient(network);
@@ -104,7 +104,7 @@ export async function getERC20TokenInfo(
 		name,
 		symbol,
 		decimals,
-		totalSupply,
+		totalSupply: totalSupply.toString(),
 		formattedTotalSupply: formatUnits(totalSupply, decimals)
 	};
 }

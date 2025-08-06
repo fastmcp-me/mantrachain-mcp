@@ -109,13 +109,15 @@ const erc1155TransferAbi = [
  * @param toAddress Recipient address
  * @param amount Amount to send in OM
  * @param network Network name or chain ID
+ * @param gasParams Optional gas fee parameters
  * @returns Transaction hash
  * @throws Error if no private key is available
  */
 export async function transferOM(
 	toAddress: string,
 	amount: string, // in ether
-	network = DEFAULT_NETWORK
+	network = DEFAULT_NETWORK,
+	gasParams?: { maxFeePerGas?: bigint; maxPriorityFeePerGas?: bigint }
 ): Promise<Hash> {
 	const validatedToAddress = services.helpers.validateAddress(toAddress);
 	// Get wallet client from provider
@@ -127,12 +129,18 @@ export async function transferOM(
 		throw new Error('Wallet account not initialized properly');
 	}
 
-	return client.sendTransaction({
+	const txParams: any = {
 		to: validatedToAddress,
 		value: amountWei,
 		account: client.account,
 		chain: client.chain
-	});
+	};
+
+	// Add gas parameters if provided
+	if (gasParams?.maxFeePerGas) txParams.maxFeePerGas = gasParams.maxFeePerGas;
+	if (gasParams?.maxPriorityFeePerGas) txParams.maxPriorityFeePerGas = gasParams.maxPriorityFeePerGas;
+
+	return client.sendTransaction(txParams);
 }
 
 /**
@@ -141,6 +149,7 @@ export async function transferOM(
  * @param toAddress Recipient address
  * @param amount Amount to send (in token units)
  * @param network Network name or chain ID
+ * @param gasParams Optional gas fee parameters
  * @returns Transaction details
  * @throws Error if no private key is available
  */
@@ -148,7 +157,8 @@ export async function transferERC20(
 	tokenAddress: string,
 	toAddress: string,
 	amount: string,
-	network = DEFAULT_NETWORK
+	network = DEFAULT_NETWORK,
+	gasParams?: { maxFeePerGas?: bigint; maxPriorityFeePerGas?: bigint }
 ): Promise<{
 	txHash: Hash;
 	amount: {
@@ -186,15 +196,21 @@ export async function transferERC20(
 		throw new Error('Wallet account not initialized properly');
 	}
 
-	// Send the transaction
-	const hash = await walletClient.writeContract({
+	const txParams: any = {
 		address: validatedTokenAddress,
 		abi: erc20TransferAbi,
 		functionName: 'transfer',
 		args: [validatedToAddress, rawAmount],
 		account: walletClient.account,
 		chain: walletClient.chain
-	});
+	};
+
+	// Add gas parameters if provided
+	if (gasParams?.maxFeePerGas) txParams.maxFeePerGas = gasParams.maxFeePerGas;
+	if (gasParams?.maxPriorityFeePerGas) txParams.maxPriorityFeePerGas = gasParams.maxPriorityFeePerGas;
+
+	// Send the transaction
+	const hash = await walletClient.writeContract(txParams);
 
 	return {
 		txHash: hash,
@@ -215,6 +231,7 @@ export async function transferERC20(
  * @param spenderAddress Spender address
  * @param amount Amount to approve (in token units)
  * @param network Network name or chain ID
+ * @param gasParams Optional gas fee parameters
  * @returns Transaction details
  * @throws Error if no private key is available
  */
@@ -222,7 +239,8 @@ export async function approveERC20(
 	tokenAddress: string,
 	spenderAddress: string,
 	amount: string,
-	network = DEFAULT_NETWORK
+	network = DEFAULT_NETWORK,
+	gasParams?: { maxFeePerGas?: bigint; maxPriorityFeePerGas?: bigint }
 ): Promise<{
 	txHash: Hash;
 	amount: {
@@ -258,15 +276,21 @@ export async function approveERC20(
 		throw new Error('Wallet account not initialized properly');
 	}
 
-	// Send the transaction
-	const hash = await walletClient.writeContract({
+	const txParams: any = {
 		address: validatedTokenAddress,
 		abi: erc20TransferAbi,
 		functionName: 'approve',
 		args: [validatedSpenderAddress, rawAmount],
 		account: walletClient.account,
 		chain: walletClient.chain
-	});
+	};
+
+	// Add gas parameters if provided
+	if (gasParams?.maxFeePerGas) txParams.maxFeePerGas = gasParams.maxFeePerGas;
+	if (gasParams?.maxPriorityFeePerGas) txParams.maxPriorityFeePerGas = gasParams.maxPriorityFeePerGas;
+
+	// Send the transaction
+	const hash = await walletClient.writeContract(txParams);
 
 	return {
 		txHash: hash,
@@ -287,6 +311,7 @@ export async function approveERC20(
  * @param toAddress Recipient address
  * @param tokenId Token ID to transfer
  * @param network Network name or chain ID
+ * @param gasParams Optional gas fee parameters
  * @returns Transaction details
  * @throws Error if no private key is available
  */
@@ -294,7 +319,8 @@ export async function transferERC721(
 	tokenAddress: string,
 	toAddress: string,
 	tokenId: bigint,
-	network = DEFAULT_NETWORK
+	network = DEFAULT_NETWORK,
+	gasParams?: { maxFeePerGas?: bigint; maxPriorityFeePerGas?: bigint }
 ): Promise<{
 	txHash: Hash;
 	tokenId: string;
@@ -316,15 +342,21 @@ export async function transferERC721(
 
 	const fromAddress = walletClient.account.address;
 
-	// Send the transaction
-	const hash = await walletClient.writeContract({
+	const txParams: any = {
 		address: validatedTokenAddress,
 		abi: erc721TransferAbi,
 		functionName: 'transferFrom',
 		args: [fromAddress, validatedToAddress, tokenId],
 		account: walletClient.account,
 		chain: walletClient.chain
-	});
+	};
+
+	// Add gas parameters if provided
+	if (gasParams?.maxFeePerGas) txParams.maxFeePerGas = gasParams.maxFeePerGas;
+	if (gasParams?.maxPriorityFeePerGas) txParams.maxPriorityFeePerGas = gasParams.maxPriorityFeePerGas;
+
+	// Send the transaction
+	const hash = await walletClient.writeContract(txParams);
 
 	// Get token metadata
 	const publicClient = getPublicClient(network);
@@ -361,6 +393,7 @@ export async function transferERC721(
  * @param tokenId Token ID to transfer
  * @param amount Amount to transfer
  * @param network Network name or chain ID
+ * @param gasParams Optional gas fee parameters
  * @returns Transaction details
  * @throws Error if no private key is available
  */
@@ -369,7 +402,8 @@ export async function transferERC1155(
 	toAddress: string,
 	tokenId: bigint,
 	amount: string,
-	network = DEFAULT_NETWORK
+	network = DEFAULT_NETWORK,
+	gasParams?: { maxFeePerGas?: bigint; maxPriorityFeePerGas?: bigint }
 ): Promise<{
 	txHash: Hash;
 	tokenId: string;
@@ -390,15 +424,21 @@ export async function transferERC1155(
 	// Parse amount to bigint
 	const amountBigInt = BigInt(amount);
 
-	// Send the transaction
-	const hash = await walletClient.writeContract({
+	const txParams: any = {
 		address: validatedTokenAddress,
 		abi: erc1155TransferAbi,
 		functionName: 'safeTransferFrom',
 		args: [fromAddress, validatedToAddress, tokenId, amountBigInt, '0x'],
 		account: walletClient.account,
 		chain: walletClient.chain
-	});
+	};
+
+	// Add gas parameters if provided
+	if (gasParams?.maxFeePerGas) txParams.maxFeePerGas = gasParams.maxFeePerGas;
+	if (gasParams?.maxPriorityFeePerGas) txParams.maxPriorityFeePerGas = gasParams.maxPriorityFeePerGas;
+
+	// Send the transaction
+	const hash = await walletClient.writeContract(txParams);
 
 	return {
 		txHash: hash,
